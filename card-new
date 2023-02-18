@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>One-Click Card</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		.card {
+			border-radius: 12px;
+			margin: 12px;
+			padding: 12px;
+			box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+		}
+
+		.card img {
+			max-width: 100%;
+			border-radius: 12px;
+			margin-bottom: 12px;
+		}
+
+		.card h3 {
+			margin: 0;
+			font-size: 18px;
+			font-weight: bold;
+			color: #333;
+		}
+	</style>
+</head>
+<body>
+	<div class="card">
+		<form onsubmit="return false;">
+			<label for="link">Enter a URL:</label><br>
+			<input type="text" id="link" name="link"><br><br>
+			<button onclick="showPreview()">Preview</button>
+		</form>
+		<img src="" alt="Preview Image">
+		<h3></h3>
+	</div>
+
+	<script>
+		function showPreview() {
+			const link = document.getElementById("link").value;
+			const imgElement = document.querySelector(".card img");
+			const titleElement = document.querySelector(".card h3");
+
+			imgElement.src = "";
+			titleElement.textContent = "";
+
+			const xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4) {
+					if (xhr.status === 200) {
+						const parser = new DOMParser();
+						const doc = parser.parseFromString(xhr.responseText, "text/html");
+						const metaTags = doc.head.querySelectorAll('meta[property^="og:"]');
+
+						for (const tag of metaTags) {
+							if (tag.getAttribute("property") === "og:image") {
+								imgElement.src = tag.getAttribute("content");
+							}
+
+							if (tag.getAttribute("property") === "og:title") {
+								titleElement.textContent = tag.getAttribute("content");
+							}
+						}
+					} else {
+						titleElement.textContent = "Error loading preview";
+					}
+				}
+			};
+			xhr.open("GET", link, true);
+			xhr.send();
+		}
+	</script>
+</body>
+</html>
